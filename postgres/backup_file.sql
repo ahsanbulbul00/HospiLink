@@ -3,9 +3,7 @@
 --
 
 -- Dumped from database version 17.0
--- Dumped by pg_dump version 17.2 (Debian 17.2-1+b1)
-
--- Started on 2025-01-22 20:09:08 +06
+-- Dumped by pg_dump version 17.2 (Debian 17.2-1+b2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -20,7 +18,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 949 (class 1247 OID 24796)
 -- Name: bloodgroup; Type: TYPE; Schema: public; Owner: oblivious
 --
 
@@ -39,7 +36,6 @@ CREATE TYPE public.bloodgroup AS ENUM (
 ALTER TYPE public.bloodgroup OWNER TO oblivious;
 
 --
--- TOC entry 910 (class 1247 OID 24619)
 -- Name: day_of_week; Type: TYPE; Schema: public; Owner: oblivious
 --
 
@@ -57,7 +53,6 @@ CREATE TYPE public.day_of_week AS ENUM (
 ALTER TYPE public.day_of_week OWNER TO oblivious;
 
 --
--- TOC entry 904 (class 1247 OID 24582)
 -- Name: medicine_type; Type: TYPE; Schema: public; Owner: oblivious
 --
 
@@ -73,7 +68,6 @@ CREATE TYPE public.medicine_type AS ENUM (
 ALTER TYPE public.medicine_type OWNER TO oblivious;
 
 --
--- TOC entry 913 (class 1247 OID 24634)
 -- Name: users_type; Type: TYPE; Schema: public; Owner: oblivious
 --
 
@@ -87,7 +81,23 @@ CREATE TYPE public.users_type AS ENUM (
 ALTER TYPE public.users_type OWNER TO oblivious;
 
 --
--- TOC entry 272 (class 1255 OID 24881)
+-- Name: add_blood_donor(character varying, character varying, text, timestamp without time zone, point, character[]); Type: FUNCTION; Schema: public; Owner: oblivious
+--
+
+CREATE FUNCTION public.add_blood_donor(p_name character varying, p_blood_group character varying, p_complexities text, p_last_donation timestamp without time zone, p_general_location point, p_phone_no character[]) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Insert into blood_repo table
+    INSERT INTO blood_repo (name, blood_group, complexities, last_donation, general_location, phone_no)
+    VALUES (p_name, p_blood_group, p_complexities, p_last_donation, p_general_location, p_phone_no);
+END;
+$$;
+
+
+ALTER FUNCTION public.add_blood_donor(p_name character varying, p_blood_group character varying, p_complexities text, p_last_donation timestamp without time zone, p_general_location point, p_phone_no character[]) OWNER TO oblivious;
+
+--
 -- Name: add_doctor_profile_pic(character varying, bytea); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -109,7 +119,6 @@ $$;
 ALTER FUNCTION public.add_doctor_profile_pic(d_username character varying, profile_pic bytea) OWNER TO oblivious;
 
 --
--- TOC entry 276 (class 1255 OID 24911)
 -- Name: calculate_max_appointments_per_day(character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -159,7 +168,6 @@ $$;
 ALTER FUNCTION public.calculate_max_appointments_per_day(p_doctor_username character varying) OWNER TO oblivious;
 
 --
--- TOC entry 277 (class 1255 OID 24912)
 -- Name: cancel_appointment(character varying, character varying, date); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -209,7 +217,6 @@ $$;
 ALTER FUNCTION public.cancel_appointment(p_patient_username character varying, p_doctor_username character varying, p_appointment_date date) OWNER TO oblivious;
 
 --
--- TOC entry 267 (class 1255 OID 24647)
 -- Name: check_user_exists(character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -230,7 +237,6 @@ $$;
 ALTER FUNCTION public.check_user_exists(p_username character varying) OWNER TO oblivious;
 
 --
--- TOC entry 252 (class 1255 OID 16438)
 -- Name: donated(character varying); Type: PROCEDURE; Schema: public; Owner: oblivious
 --
 
@@ -248,7 +254,34 @@ $$;
 ALTER PROCEDURE public.donated(IN donor character varying) OWNER TO oblivious;
 
 --
--- TOC entry 250 (class 1255 OID 24857)
+-- Name: find_duplicate_phone_number(character); Type: FUNCTION; Schema: public; Owner: oblivious
+--
+
+CREATE FUNCTION public.find_duplicate_phone_number(p_phone_no character) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    result INT := 0;
+BEGIN
+    -- Check if the given phone number exists in any of the phone_no arrays in blood_repo
+    IF EXISTS (
+        SELECT 1
+        FROM blood_repo
+        WHERE p_phone_no = ANY(phone_no)
+    ) THEN
+        result := 1; -- Match found, return 1
+    ELSE
+        result := 0; -- No match found, return 0
+    END IF;
+
+    RETURN result; -- Return the result
+END;
+$$;
+
+
+ALTER FUNCTION public.find_duplicate_phone_number(p_phone_no character) OWNER TO oblivious;
+
+--
 -- Name: find_user_type(character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -272,7 +305,6 @@ $$;
 ALTER FUNCTION public.find_user_type(p_username character varying) OWNER TO oblivious;
 
 --
--- TOC entry 253 (class 1255 OID 24892)
 -- Name: get_name(character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -297,7 +329,6 @@ $$;
 ALTER FUNCTION public.get_name(p_username character varying) OWNER TO oblivious;
 
 --
--- TOC entry 273 (class 1255 OID 24891)
 -- Name: get_profile_pic(character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -320,7 +351,6 @@ $$;
 ALTER FUNCTION public.get_profile_pic(p_username character varying) OWNER TO oblivious;
 
 --
--- TOC entry 251 (class 1255 OID 16437)
 -- Name: haversine_distance(point, point); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -349,7 +379,6 @@ $$;
 ALTER FUNCTION public.haversine_distance(point1 point, point2 point) OWNER TO oblivious;
 
 --
--- TOC entry 248 (class 1255 OID 24852)
 -- Name: login_user(character varying, character); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -379,7 +408,6 @@ $$;
 ALTER FUNCTION public.login_user(p_username character varying, p_password_hash character) OWNER TO oblivious;
 
 --
--- TOC entry 278 (class 1255 OID 24913)
 -- Name: reschedule_appointment(character varying, character varying, date, date); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -408,7 +436,6 @@ $$;
 ALTER FUNCTION public.reschedule_appointment(p_patient_username character varying, p_doctor_username character varying, old_date date, new_date date) OWNER TO oblivious;
 
 --
--- TOC entry 266 (class 1255 OID 24856)
 -- Name: reset_user_password(character varying, character, character); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -439,7 +466,6 @@ $$;
 ALTER FUNCTION public.reset_user_password(p_username character varying, p_answer_hash character, p_new_password_hash character) OWNER TO oblivious;
 
 --
--- TOC entry 275 (class 1255 OID 24910)
 -- Name: schedule_appointment(character varying, character varying, date); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -545,7 +571,6 @@ $$;
 ALTER FUNCTION public.schedule_appointment(p_patient_username character varying, p_doctor_username character varying, p_appointment_date date) OWNER TO oblivious;
 
 --
--- TOC entry 270 (class 1255 OID 16440)
 -- Name: search_donor(character); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -576,7 +601,6 @@ $$;
 ALTER FUNCTION public.search_donor(_blood_group character) OWNER TO oblivious;
 
 --
--- TOC entry 279 (class 1255 OID 24914)
 -- Name: show_past_appointments(character varying, character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -618,7 +642,6 @@ $$;
 ALTER FUNCTION public.show_past_appointments(p_username character varying, p_user_type character varying) OWNER TO oblivious;
 
 --
--- TOC entry 268 (class 1255 OID 24853)
 -- Name: show_security_question(character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -642,7 +665,6 @@ $$;
 ALTER FUNCTION public.show_security_question(p_username character varying) OWNER TO oblivious;
 
 --
--- TOC entry 280 (class 1255 OID 24915)
 -- Name: show_upcoming_appointments(character varying, character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -684,7 +706,6 @@ $$;
 ALTER FUNCTION public.show_upcoming_appointments(p_username character varying, p_user_type character varying) OWNER TO oblivious;
 
 --
--- TOC entry 269 (class 1255 OID 24883)
 -- Name: signup_doctor(character varying, character, character varying, public.day_of_week[], time without time zone, time without time zone, character varying, text[], integer, integer); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -722,7 +743,6 @@ $$;
 ALTER FUNCTION public.signup_doctor(p_username character varying, p_phone_no character, p_specialization character varying, p_visiting_days public.day_of_week[], p_visiting_time_start time without time zone, p_visiting_time_end time without time zone, d_gender character varying, p_degrees text[], p_fee integer, p_avg_time integer) OWNER TO oblivious;
 
 --
--- TOC entry 271 (class 1255 OID 24860)
 -- Name: signup_patient(character varying, character, public.bloodgroup, text, date, character varying); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -752,7 +772,6 @@ $$;
 ALTER FUNCTION public.signup_patient(p_username character varying, p_phone_no character, p_blood_group public.bloodgroup, p_complexities text, p_date_of_birth date, p_gender character varying) OWNER TO oblivious;
 
 --
--- TOC entry 274 (class 1255 OID 24884)
 -- Name: signup_users(character varying, character varying, character, public.users_type, text, character, character, public.bloodgroup, text, character varying, public.day_of_week[], time without time zone, time without time zone, date, character varying, text[], integer, integer); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -816,7 +835,6 @@ $_$;
 ALTER FUNCTION public.signup_users(p_username character varying, p_name character varying, p_password_hash character, p_users_type public.users_type, p_security_question text, p_security_answer_hash character, c_phone_no character, pt_blood_group public.bloodgroup, pt_complexities text, dc_specialization character varying, dc_visiting_days public.day_of_week[], dc_visiting_time_start time without time zone, dc_visiting_time_end time without time zone, pt_dob date, pt_gender character varying, degrees text[], p_fee integer, p_avg_time integer) OWNER TO oblivious;
 
 --
--- TOC entry 247 (class 1255 OID 16441)
 -- Name: validate_blood_group(); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -836,7 +854,6 @@ $$;
 ALTER FUNCTION public.validate_blood_group() OWNER TO oblivious;
 
 --
--- TOC entry 265 (class 1255 OID 16431)
 -- Name: validate_phone_no(); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -854,11 +871,12 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Ensure that the phone numbers are unique in the table
+    -- Ensure that the phone numbers are unique in the table (excluding the current row)
     IF EXISTS (
         SELECT 1
         FROM blood_repo
-        WHERE NEW.phone_no && phone_no
+        WHERE phone_no && NEW.phone_no
+          AND name != NEW.name  -- Exclude the current row based on the name
     ) THEN
         RAISE EXCEPTION 'Phone number already exists';
     END IF;
@@ -871,7 +889,6 @@ $$;
 ALTER FUNCTION public.validate_phone_no() OWNER TO oblivious;
 
 --
--- TOC entry 249 (class 1255 OID 24854)
 -- Name: verify_security_question(character varying, character); Type: FUNCTION; Schema: public; Owner: oblivious
 --
 
@@ -901,7 +918,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- TOC entry 246 (class 1259 OID 24894)
 -- Name: appointments; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -917,7 +933,6 @@ CREATE TABLE public.appointments (
 ALTER TABLE public.appointments OWNER TO oblivious;
 
 --
--- TOC entry 245 (class 1259 OID 24893)
 -- Name: appointments_appointment_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -933,8 +948,6 @@ CREATE SEQUENCE public.appointments_appointment_id_seq
 ALTER SEQUENCE public.appointments_appointment_id_seq OWNER TO oblivious;
 
 --
--- TOC entry 3635 (class 0 OID 0)
--- Dependencies: 245
 -- Name: appointments_appointment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: oblivious
 --
 
@@ -942,7 +955,6 @@ ALTER SEQUENCE public.appointments_appointment_id_seq OWNED BY public.appointmen
 
 
 --
--- TOC entry 228 (class 1259 OID 24671)
 -- Name: auth_group; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -955,7 +967,6 @@ CREATE TABLE public.auth_group (
 ALTER TABLE public.auth_group OWNER TO oblivious;
 
 --
--- TOC entry 227 (class 1259 OID 24670)
 -- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -970,7 +981,6 @@ ALTER TABLE public.auth_group ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTI
 
 
 --
--- TOC entry 230 (class 1259 OID 24679)
 -- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -984,7 +994,6 @@ CREATE TABLE public.auth_group_permissions (
 ALTER TABLE public.auth_group_permissions OWNER TO oblivious;
 
 --
--- TOC entry 229 (class 1259 OID 24678)
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -999,7 +1008,6 @@ ALTER TABLE public.auth_group_permissions ALTER COLUMN id ADD GENERATED BY DEFAU
 
 
 --
--- TOC entry 226 (class 1259 OID 24665)
 -- Name: auth_permission; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1014,7 +1022,6 @@ CREATE TABLE public.auth_permission (
 ALTER TABLE public.auth_permission OWNER TO oblivious;
 
 --
--- TOC entry 225 (class 1259 OID 24664)
 -- Name: auth_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1029,7 +1036,6 @@ ALTER TABLE public.auth_permission ALTER COLUMN id ADD GENERATED BY DEFAULT AS I
 
 
 --
--- TOC entry 232 (class 1259 OID 24685)
 -- Name: auth_user; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1051,7 +1057,6 @@ CREATE TABLE public.auth_user (
 ALTER TABLE public.auth_user OWNER TO oblivious;
 
 --
--- TOC entry 234 (class 1259 OID 24693)
 -- Name: auth_user_groups; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1065,7 +1070,6 @@ CREATE TABLE public.auth_user_groups (
 ALTER TABLE public.auth_user_groups OWNER TO oblivious;
 
 --
--- TOC entry 233 (class 1259 OID 24692)
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1080,7 +1084,6 @@ ALTER TABLE public.auth_user_groups ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- TOC entry 231 (class 1259 OID 24684)
 -- Name: auth_user_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1095,7 +1098,6 @@ ALTER TABLE public.auth_user ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTIT
 
 
 --
--- TOC entry 236 (class 1259 OID 24699)
 -- Name: auth_user_user_permissions; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1109,7 +1111,6 @@ CREATE TABLE public.auth_user_user_permissions (
 ALTER TABLE public.auth_user_user_permissions OWNER TO oblivious;
 
 --
--- TOC entry 235 (class 1259 OID 24698)
 -- Name: auth_user_user_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1124,7 +1125,6 @@ ALTER TABLE public.auth_user_user_permissions ALTER COLUMN id ADD GENERATED BY D
 
 
 --
--- TOC entry 217 (class 1259 OID 16426)
 -- Name: blood_repo; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1134,14 +1134,13 @@ CREATE TABLE public.blood_repo (
     complexities text,
     last_donation timestamp without time zone,
     general_location point,
-    phone_no character(11)[]
+    phone_no bpchar[]
 );
 
 
 ALTER TABLE public.blood_repo OWNER TO oblivious;
 
 --
--- TOC entry 238 (class 1259 OID 24757)
 -- Name: django_admin_log; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1161,7 +1160,6 @@ CREATE TABLE public.django_admin_log (
 ALTER TABLE public.django_admin_log OWNER TO oblivious;
 
 --
--- TOC entry 237 (class 1259 OID 24756)
 -- Name: django_admin_log_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1176,7 +1174,6 @@ ALTER TABLE public.django_admin_log ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- TOC entry 224 (class 1259 OID 24657)
 -- Name: django_content_type; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1190,7 +1187,6 @@ CREATE TABLE public.django_content_type (
 ALTER TABLE public.django_content_type OWNER TO oblivious;
 
 --
--- TOC entry 223 (class 1259 OID 24656)
 -- Name: django_content_type_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1205,7 +1201,6 @@ ALTER TABLE public.django_content_type ALTER COLUMN id ADD GENERATED BY DEFAULT 
 
 
 --
--- TOC entry 222 (class 1259 OID 24649)
 -- Name: django_migrations; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1220,7 +1215,6 @@ CREATE TABLE public.django_migrations (
 ALTER TABLE public.django_migrations OWNER TO oblivious;
 
 --
--- TOC entry 221 (class 1259 OID 24648)
 -- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1235,7 +1229,6 @@ ALTER TABLE public.django_migrations ALTER COLUMN id ADD GENERATED BY DEFAULT AS
 
 
 --
--- TOC entry 239 (class 1259 OID 24785)
 -- Name: django_session; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1249,7 +1242,6 @@ CREATE TABLE public.django_session (
 ALTER TABLE public.django_session OWNER TO oblivious;
 
 --
--- TOC entry 242 (class 1259 OID 24821)
 -- Name: doctors; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1270,7 +1262,6 @@ CREATE TABLE public.doctors (
 ALTER TABLE public.doctors OWNER TO oblivious;
 
 --
--- TOC entry 218 (class 1259 OID 16434)
 -- Name: hospital_info; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1282,7 +1273,6 @@ CREATE TABLE public.hospital_info (
 ALTER TABLE public.hospital_info OWNER TO oblivious;
 
 --
--- TOC entry 219 (class 1259 OID 24609)
 -- Name: medicine; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1304,7 +1294,6 @@ CREATE TABLE public.medicine (
 ALTER TABLE public.medicine OWNER TO oblivious;
 
 --
--- TOC entry 243 (class 1259 OID 24835)
 -- Name: patients; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1321,7 +1310,6 @@ CREATE TABLE public.patients (
 ALTER TABLE public.patients OWNER TO oblivious;
 
 --
--- TOC entry 244 (class 1259 OID 24869)
 -- Name: profile_picture; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1334,7 +1322,6 @@ CREATE TABLE public.profile_picture (
 ALTER TABLE public.profile_picture OWNER TO oblivious;
 
 --
--- TOC entry 241 (class 1259 OID 24814)
 -- Name: user_authentication_user; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1351,7 +1338,6 @@ CREATE TABLE public.user_authentication_user (
 ALTER TABLE public.user_authentication_user OWNER TO oblivious;
 
 --
--- TOC entry 240 (class 1259 OID 24813)
 -- Name: user_authentication_user_id_seq; Type: SEQUENCE; Schema: public; Owner: oblivious
 --
 
@@ -1366,7 +1352,6 @@ ALTER TABLE public.user_authentication_user ALTER COLUMN id ADD GENERATED BY DEF
 
 
 --
--- TOC entry 220 (class 1259 OID 24639)
 -- Name: users; Type: TABLE; Schema: public; Owner: oblivious
 --
 
@@ -1383,7 +1368,6 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO oblivious;
 
 --
--- TOC entry 3370 (class 2604 OID 24897)
 -- Name: appointments appointment_id; Type: DEFAULT; Schema: public; Owner: oblivious
 --
 
@@ -1391,8 +1375,6 @@ ALTER TABLE ONLY public.appointments ALTER COLUMN appointment_id SET DEFAULT nex
 
 
 --
--- TOC entry 3629 (class 0 OID 24894)
--- Dependencies: 246
 -- Data for Name: appointments; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1411,12 +1393,11 @@ COPY public.appointments (appointment_id, patient_username, doctor_username, app
 14	faraiba	shadabtanjeed23	2025-01-24	18:00:00
 15	faraiba	shadabtanjeed23	2025-01-31	18:00:00
 16	faraiba	yasemine	2025-01-21	22:03:00
+17	faraiba	shadabtanjeed23	2025-02-22	18:00:00
 \.
 
 
 --
--- TOC entry 3611 (class 0 OID 24671)
--- Dependencies: 228
 -- Data for Name: auth_group; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1425,8 +1406,6 @@ COPY public.auth_group (id, name) FROM stdin;
 
 
 --
--- TOC entry 3613 (class 0 OID 24679)
--- Dependencies: 230
 -- Data for Name: auth_group_permissions; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1435,8 +1414,6 @@ COPY public.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 
 
 --
--- TOC entry 3609 (class 0 OID 24665)
--- Dependencies: 226
 -- Data for Name: auth_permission; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1473,18 +1450,15 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 
 
 --
--- TOC entry 3615 (class 0 OID 24685)
--- Dependencies: 232
 -- Data for Name: auth_user; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
 COPY public.auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
+1	pbkdf2_sha256$870000$XtRpgZNM7IXfIKPV3CBhis$L9E4HlbWr5Y9ThkZbG9GiQsTXTlRyRy96qH/hR/O9mM=	2025-02-15 14:02:59.195728+00	t	halum			halumgrr420@gmail.com	t	t	2025-02-15 14:02:37.32431+00
 \.
 
 
 --
--- TOC entry 3617 (class 0 OID 24693)
--- Dependencies: 234
 -- Data for Name: auth_user_groups; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1493,8 +1467,6 @@ COPY public.auth_user_groups (id, user_id, group_id) FROM stdin;
 
 
 --
--- TOC entry 3619 (class 0 OID 24699)
--- Dependencies: 236
 -- Data for Name: auth_user_user_permissions; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1503,8 +1475,6 @@ COPY public.auth_user_user_permissions (id, user_id, permission_id) FROM stdin;
 
 
 --
--- TOC entry 3600 (class 0 OID 16426)
--- Dependencies: 217
 -- Data for Name: blood_repo; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1552,12 +1522,18 @@ Emily Roberts	O-	Cough.	2024-02-27 17:42:11	(89.4387,23.8763)	{01966474589}
 William Clark	A+	Weight loss.	2024-01-18 13:22:56	(90.3478,22.9645)	{01684629537}
 valid User	O+	None	2024-10-01 12:00:00	(90.4125,23.8103)	{01712345688}
 John Sinha	B-	Invisible	2024-10-01 12:00:00	(90,25)	{01712335678}
+Shadab	A+	SKIN COMPLEXION	2025-02-10 20:00:00	(23.764848614909024,90.38508306010044)	{01786542521,01789651536}
+Faraiba2	B-	too white for shadab	2025-02-03 20:09:00	(23.81962432252488,90.43621608114336)	{01576486518}
+Nathaniel Gru	B-	Skin	2025-02-11 10:22:00	(23.763123807035196,90.36157250404358)	{01298767876,01298767875,01298767874,01298767873}
+Minions	A+	Banana	2025-02-05 22:20:00	(36.820845262689424,-119.64111395180228)	{01798456318,01498756123,01896541237}
+Nina Gru	B-	Skin	2025-02-07 23:22:00	(23.810066994687386,90.38984298706055)	{01298767871,01298767872}
+Ahsan Bulbul	A-	Sleep Schedule	2025-02-05 21:18:00	(23.85105084916194,90.67442322091667)	{01712345464,01987452314}
+Niao	A+	ddj	2023-06-06 06:06:00	(23.73290061820433,90.47701263480123)	{01987654333}
+Nihao	B-	jdkd	1111-11-11 11:11:00	(90.36337280325824,23.833308475813837)	{01888888888}
 \.
 
 
 --
--- TOC entry 3621 (class 0 OID 24757)
--- Dependencies: 238
 -- Data for Name: django_admin_log; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1566,8 +1542,6 @@ COPY public.django_admin_log (id, action_time, object_id, object_repr, action_fl
 
 
 --
--- TOC entry 3607 (class 0 OID 24657)
--- Dependencies: 224
 -- Data for Name: django_content_type; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1579,12 +1553,13 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 5	contenttypes	contenttype
 6	sessions	session
 7	user_authentication	user
+8	user_authentication	appointments
+9	user_authentication	doctors
+10	user_authentication	profilepicture
 \.
 
 
 --
--- TOC entry 3605 (class 0 OID 24649)
--- Dependencies: 222
 -- Data for Name: django_migrations; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1612,12 +1587,11 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 
 
 --
--- TOC entry 3622 (class 0 OID 24785)
--- Dependencies: 239
 -- Data for Name: django_session; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
 COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
+kt4h7xg6zxh91h40ybg5qddmtuofbxxl	.eJyrVsrJT8_Mi0_LL8qNT0ksSVSyqlYqLU4tykvMTVWyUipKzEtPLVLSAYvFl1QWgAVTk1MLSjLz8zKLS5RqdVD48ZiaawFrHSVh:1tkQ1s:n9MSoiQKcWHe3ttFUjp-jPJly3fV1l07IDD7H_aZS-Q	2025-03-04 16:01:00.687645+00
 uuo8c2nx56qbjig6v77u4xuc34snacdh	eyJsb2dpbl9mb3JtX2RhdGEiOnsidXNlcm5hbWUiOiJhaHNhbiIsInVzZXJfdHlwZSI6InBhdGllbnQifX0:1tDOi6:ylHq3V_UKQVY3WT4FT7JdCqZauLuU8jxOT1jh0ARqKQ	2024-12-03 13:56:06.077188+00
 fs2lijukon5i97icf3a4t3dnckuldao2	.eJx1T0sOgkAMvQrpGhIRf7Azrlx4hkmRApMM7WQYEo3h7hZlqbvmffte0EoYTIMRoXrBNFJgHAgqwH5EhvQDmfj0C-YxWuKoqO-FyfA01BSU2OTl6XjY74ptruSacF4TaifSmC7I5KHiybkU7jJ4Rw-rcaMqr9xSsBJsfCaXL6U-fYoSaZPahtirKi_LMsu3WbF0dMTNp_qGjmBOwUln2fxb02JAW-OfPWpfT_PDM78BKv1iuA:1tDeWR:liKFqleY0VdTOGjkQoMrKUUz4fI2c4y0NfXqcPGtdQE	2024-12-04 06:49:07.851959+00
 nm95tb2rk9sip269e38ske050487ir0h	.eJyrVsrJT8_Mi0_LL8qNT0ksSVSyqlYqLU4tykvMTVWyUipJzCjOzCvNySzOScw1MlTSAUvGl1QWgGQLEksyU_NKlGp1YMx4PHprAZp1J90:1tDluo:AiQLWmyRQzecuTWf122Qok4848MBmve0f3QVLFhcOJU	2024-12-04 14:42:46.851782+00
@@ -1629,12 +1603,15 @@ gmb6uks2kgh7dqu2h7cndkqy0fljfamr	.eJydj0sOgzAMBa-CvAYJSn-wq7rqomeIQjEQKdhRSKQixN
 mrnbrhebl11nnm1qbme3uvc7p5k613iy	.eJxtyzEKgDAMheG7ZO7i2suEqKkENC1pHKT07qIgKLg9Pt7fYM2LKKZsG87kBLHBXtmUNoYIiYxkJAg3oh_l0kIurA49PBN_G-OJi0tWqZ_H2wfoJ6vqMLc:1tYpKP:fIxg-N2k8rtzJIgrI3UFWr9P3lGK254WvX4rHS0Ukac	2025-01-31 16:36:13.731428+00
 ojsdvvy0k6e9cj2tochq6cjotfyo3rzd	.eJyrVsrJT8_Mi0_LL8qNT0ksSVSyqlYqLU4tykvMTVWyUkpLLErMTEpU0gELxpdUFoBECxJLMlPzSpRqdWDMeCx6agE21SGn:1tYlks:LYmPGnTWRDcRZ1OGdBVwmwxNQfPAOEUtrChzgsJWVnA	2025-01-31 12:47:18.039818+00
 w2wbau7310n7tq1a05y3oq0ckl6jjrf6	.eJyrVsrJT8_Mi0_LL8qNT0ksSVSyqlYqLU4tykvMTVWyUipKzEtPLVLSAYvFl1QWgAVTk1MLSjLz8zKLS5RqdVD48ZiaawFrHSVh:1tZ9fo:Xy9NuffSPYJYOwnmDj5eRIGaSslyNDiShCwunNdS7fQ	2025-02-01 14:19:40.548083+00
+ndtratulaynwoli9xushr70jt9lajerx	.eJx9jDEKgDAMAP-SuYtrPxOiphKwaUnjIKV_F9zq4HjccR3OcohiKpZxJyeIHa7GppQZIhhvXF2KSvMFwqvQ7_p1MMLE-POo5MI6JYmMZCUYDykcNV8:1tiFSP:JmLP4VznJfNZ-d5C_flh8JYEY4bYySQYhMkvckYABDI	2025-02-26 16:19:25.949688+00
+2ygr52ekkc29vm6c5ab45ass51uoijfe	.eJx1kM2qwjAQhV8lZHtVav256k50I-gzhNROajCdCdMULOK7O3q7uKJuz3f4mDNX7YhrU9pk9eqq2wYYbQ16pUPrXKcHz8ikLj6yaJMHTJLGEyEYbOsCWEC2XPzOZ9NJPh4L7A0HwjN0ajtS-95VBKLSVExtFL7-kehIdQxw8SJuJNuhA_bEPnVq84ekJOeBIqcKz-kkrTzLZ8MsH2YLgRVg-TziYAPo20AHqjyab7vYYiX112EMR4jJE_omPRT9UPPhH_-r5t17uwMo-nJ6:1tiFgi:30flLalZhJvvGsVQzYwYwhaGjn0pOK31DI-oLtCyWR8	2025-02-26 16:34:12.993198+00
+r3b2lzpjt5omgr1190b61rshm3zz32rk	.eJxVjMEOgjAQRP-lZ9NsaUuLR-98Q9Pd7QpqIKFwMv67kHDQ22Tem3mrlLd1SFstSxpZXZVRl98OMz3LdAB-5Ok-a5qndRlRH4o-adX9zOV1O92_gyHXYV-LOMu5YfJEIBbAO29sU2KgaLGNgIBtQIh79mLQkXTQiUMxTYjI6vMF6Oc3-g:1tjIl1:y4VpUtM43A1ZLUC4EUYRV6hFsdYcnD7cT2WxO4yLRp8	2025-03-01 14:02:59.26504+00
+iglyucoj8uob5jdx29mvkzd2agixgfq2	.eJyrVsrJT8_Mi0_LL8qNT0ksSVSyqlYqLU4tykvMTVWyUipJzCjOzCvNySzOScw1MlTSAUvGl1QWgGQLEksyU_NKlGp1YMx4PHprAZp1J90:1tjJQq:Wxwmv_1jjs_iP3iVtCt-Gei4otB-xGHG-fcKaUkTwwA	2025-03-01 14:46:12.024403+00
+zzolw8cahje37uy3ver3lmyj9tdhndwh	.eJx1jTEKgDAMAP-SuYtrPxOiphLQtKRxkNK_K05FcL47rsGeN1FM2Q5cyQlig7OyKR0MEYwXLi5ZpfoE4UXoV_ky6AEKubA6DnkiI5npCUcZfwf9BhSMNV8:1tkPIz:4tLLVVQEx_0oHkkBDqBa_ZX-6waqWkI0UhMDZzBM30U	2025-03-04 15:14:37.106482+00
 \.
 
 
 --
--- TOC entry 3625 (class 0 OID 24821)
--- Dependencies: 242
 -- Data for Name: doctors; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1650,8 +1627,6 @@ jyoti	46449      	{friday,saturday,sunday}	00:59:00	05:19:00	Neurologist	Male	{B
 
 
 --
--- TOC entry 3601 (class 0 OID 16434)
--- Dependencies: 218
 -- Data for Name: hospital_info; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1661,8 +1636,6 @@ COPY public.hospital_info (hospital_location) FROM stdin;
 
 
 --
--- TOC entry 3602 (class 0 OID 24609)
--- Dependencies: 219
 -- Data for Name: medicine; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1721,8 +1694,6 @@ Vitamax	Multivitamins	tablet	ACI Limited	500mg	2026-10-10	2028-10-10	250	20.00
 
 
 --
--- TOC entry 3626 (class 0 OID 24835)
--- Dependencies: 243
 -- Data for Name: patients; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1732,12 +1703,11 @@ faraiba	0423425989 	A-		2002-06-13	Female
 ahsan	01987654321	A+	Inferiority Complex	1999-12-31	Male
 karim	042342564  	A-		2015-06-12	Male
 shadab_tanjeed	042342646  	B+	Nothing	2024-11-08	Male
+luffy	09876543211	A+	Inferiority Complex	2025-02-08	Male
 \.
 
 
 --
--- TOC entry 3627 (class 0 OID 24869)
--- Dependencies: 244
 -- Data for Name: profile_picture; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1753,8 +1723,6 @@ jyoti	\\x89504e470d0a1a0a0000000d49484452000001c6000001e20806000000725f6c0900000
 
 
 --
--- TOC entry 3624 (class 0 OID 24814)
--- Dependencies: 241
 -- Data for Name: user_authentication_user; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1763,8 +1731,6 @@ COPY public.user_authentication_user (id, username, password_hash, user_type, se
 
 
 --
--- TOC entry 3603 (class 0 OID 24639)
--- Dependencies: 220
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: oblivious
 --
 
@@ -1773,7 +1739,6 @@ shadabtanjeed2	837ae03e1636ff7ca43d825a473be620babec1f82ba6a8d88351675b6b6578dba
 shadabtanjeed3	837ae03e1636ff7ca43d825a473be620babec1f82ba6a8d88351675b6b6578dbadc9fa51e3b136e8caf665c8d99b571bc07fde877c1ac464503aa9660ef966bc	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Shadab Tanjeed
 shadabtanjeed23	837ae03e1636ff7ca43d825a473be620babec1f82ba6a8d88351675b6b6578dbadc9fa51e3b136e8caf665c8d99b571bc07fde877c1ac464503aa9660ef966bc	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Shadab Tanjeed
 johnballman	2ae3bea6e6ada2f35d0f76d389f432da871a7ee04cd493af528c4f27dd9fed5aeadc3df097f10e353fce165b77eacd737004d5e39227efa179a5f420e9bb7b48	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	John Ballman
-shadabtanjeed	e536d0370b5386a673229c21dba693c77446327d9e2ca5d15623397303c4e727422f3681a83c045f3831c6abdd53bcbc5251c063cd356a51f50d3e2b6e864c0a	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Shadab Tanjeed
 tahsinulislam21	eec6052f1117ecf45dbc42e38628eb3050d95102dd6c742e92fb796823d4dcd87a51905affab3a230ec0822e51ce0617608fbafdec8affa39b67323a29fdefc4	patient	What is your nickname?	d78efaa9375803712779088e915cf65c556edee01d6f70c29a0e86ba6b76ae71234507c33f89f50463b4a55f9c07f44b141c557dd9488ca8e378d11a57584d76	Tahsinul Islam
 peggygou	ebb9701f24051fc56c664845d98a34ece64a12368ab649ef5a0f66eedb3bc12af1c4caed863ac6b812b3e69326165189028356fa5c96c0908134f759326dac35	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Peggy Gou
 yasemine	c01fc6cb0539c3da19a49243af9002bf7bb3c7b98e3143c6b790e0e1278cf5854a6ff45386aac89dfdf0148c386d5f1850c92b9d5e5ef1f08cf5462c2cb3438c	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Yasemine Youssaf
@@ -1783,24 +1748,22 @@ karim	6aeb5666ce3a75b8a2da886dabb1cd75ba1485f513d1cb7735eebd5ef4266a26308db8390d
 shadab_tanjeed	837ae03e1636ff7ca43d825a473be620babec1f82ba6a8d88351675b6b6578dbadc9fa51e3b136e8caf665c8d99b571bc07fde877c1ac464503aa9660ef966bc	patient	What is your name?	0443b7b243744a714601c9b388b1b602dea3a8987698c4eef70baed7a91589fd2e152acf6bda805695112ad78c871e4fa8cacd701fd0eb0a242b865188337520	Shadab Tanjeed
 faraiba	3d456a175a76d94221c1c055e59c168024cc6df9cfb3402c793cd8f473ecab5fd0e59f08a87d6b4bc8aff906676a520da07512c558d7a500efc99767885cad22	patient	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Faraiba Ahmed
 jyoti	3c00cbffc4d1977959d1775ee13a1c6bfb2f490c0409f448dd86eedd4943d1677f80a5b8a24eda7655594e2a809355311aa1b692eaf98448527b67fca63d727b	patient	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Jyoti Khan
+shadabtanjeed	837ae03e1636ff7ca43d825a473be620babec1f82ba6a8d88351675b6b6578dbadc9fa51e3b136e8caf665c8d99b571bc07fde877c1ac464503aa9660ef966bc	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Shadab Tanjeed
 ranger	adfb6dd1ab1238afc37acd8ca24c1279f8d46f61907dd842faab35b0cc41c6e8ad84cbdbef4964b8334c22c4985c2387d53bc47e6c3d0940ac962f521a127d9f	receptionist	letmein	adfb6dd1ab1238afc37acd8ca24c1279f8d46f61907dd842faab35b0cc41c6e8ad84cbdbef4964b8334c22c4985c2387d53bc47e6c3d0940ac962f521a127d9f	Receptionist Ranger
 receptionist1	e428d9cb028ad2cd90ca4e11a8920498f849e05231bc4c9b015c6f4cf7d733561e44fa450a532799c4faa37903ecc57d482005fb2d1d8e79ac40a4fd7a990c45	receptionist	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Receptionist1
+luffy	ffed6886cbfac413cf2bea270dfb9260d28a567255545b61c7bafcf63c359e6f1f7f43c9cb0e343b05ad076b4a070af43d6f619553c2431ff0c70be7e31427eb	patient	Password is N1kun!ku	ffed6886cbfac413cf2bea270dfb9260d28a567255545b61c7bafcf63c359e6f1f7f43c9cb0e343b05ad076b4a070af43d6f619553c2431ff0c70be7e31427eb	Monkey D. Luffy
 abukashem	793afd11316b858e7dfb74b2cae9de876f808b89ff0f5b00bc7d981ba326113b65cdd6fe2b8f9ff239e0ee7f00592567165ef11beddbc0af44d250ee1978c47e	doctor	What are you?	5e319bb988ec9857ee5f8e77b0923e16424e72d0ce74c09a394011bd2f441cd0265575173f2699c0d76dac1d07d68e886485bb7d73dc7fdfd9df211499eebff2	Abu Kashem
 \.
 
 
 --
--- TOC entry 3636 (class 0 OID 0)
--- Dependencies: 245
 -- Name: appointments_appointment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
-SELECT pg_catalog.setval('public.appointments_appointment_id_seq', 16, true);
+SELECT pg_catalog.setval('public.appointments_appointment_id_seq', 17, true);
 
 
 --
--- TOC entry 3637 (class 0 OID 0)
--- Dependencies: 227
 -- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1808,8 +1771,6 @@ SELECT pg_catalog.setval('public.auth_group_id_seq', 1, false);
 
 
 --
--- TOC entry 3638 (class 0 OID 0)
--- Dependencies: 229
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1817,8 +1778,6 @@ SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 1, false);
 
 
 --
--- TOC entry 3639 (class 0 OID 0)
--- Dependencies: 225
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1826,8 +1785,6 @@ SELECT pg_catalog.setval('public.auth_permission_id_seq', 28, true);
 
 
 --
--- TOC entry 3640 (class 0 OID 0)
--- Dependencies: 233
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1835,17 +1792,13 @@ SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 1, false);
 
 
 --
--- TOC entry 3641 (class 0 OID 0)
--- Dependencies: 231
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
-SELECT pg_catalog.setval('public.auth_user_id_seq', 1, false);
+SELECT pg_catalog.setval('public.auth_user_id_seq', 1, true);
 
 
 --
--- TOC entry 3642 (class 0 OID 0)
--- Dependencies: 235
 -- Name: auth_user_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1853,8 +1806,6 @@ SELECT pg_catalog.setval('public.auth_user_user_permissions_id_seq', 1, false);
 
 
 --
--- TOC entry 3643 (class 0 OID 0)
--- Dependencies: 237
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1862,17 +1813,13 @@ SELECT pg_catalog.setval('public.django_admin_log_id_seq', 1, false);
 
 
 --
--- TOC entry 3644 (class 0 OID 0)
--- Dependencies: 223
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 7, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 10, true);
 
 
 --
--- TOC entry 3645 (class 0 OID 0)
--- Dependencies: 221
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1880,8 +1827,6 @@ SELECT pg_catalog.setval('public.django_migrations_id_seq', 19, true);
 
 
 --
--- TOC entry 3646 (class 0 OID 0)
--- Dependencies: 240
 -- Name: user_authentication_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oblivious
 --
 
@@ -1889,7 +1834,6 @@ SELECT pg_catalog.setval('public.user_authentication_user_id_seq', 1, false);
 
 
 --
--- TOC entry 3438 (class 2606 OID 24899)
 -- Name: appointments appointments_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1898,7 +1842,6 @@ ALTER TABLE ONLY public.appointments
 
 
 --
--- TOC entry 3391 (class 2606 OID 24783)
 -- Name: auth_group auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1907,7 +1850,6 @@ ALTER TABLE ONLY public.auth_group
 
 
 --
--- TOC entry 3396 (class 2606 OID 24714)
 -- Name: auth_group_permissions auth_group_permissions_group_id_permission_id_0cd325b0_uniq; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1916,7 +1858,6 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- TOC entry 3399 (class 2606 OID 24683)
 -- Name: auth_group_permissions auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1925,7 +1866,6 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- TOC entry 3393 (class 2606 OID 24675)
 -- Name: auth_group auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1934,7 +1874,6 @@ ALTER TABLE ONLY public.auth_group
 
 
 --
--- TOC entry 3386 (class 2606 OID 24705)
 -- Name: auth_permission auth_permission_content_type_id_codename_01ab375a_uniq; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1943,7 +1882,6 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- TOC entry 3388 (class 2606 OID 24669)
 -- Name: auth_permission auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1952,7 +1890,6 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- TOC entry 3407 (class 2606 OID 24697)
 -- Name: auth_user_groups auth_user_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1961,7 +1898,6 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- TOC entry 3410 (class 2606 OID 24729)
 -- Name: auth_user_groups auth_user_groups_user_id_group_id_94350c0c_uniq; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1970,7 +1906,6 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- TOC entry 3401 (class 2606 OID 24689)
 -- Name: auth_user auth_user_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1979,7 +1914,6 @@ ALTER TABLE ONLY public.auth_user
 
 
 --
--- TOC entry 3413 (class 2606 OID 24703)
 -- Name: auth_user_user_permissions auth_user_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1988,7 +1922,6 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- TOC entry 3416 (class 2606 OID 24743)
 -- Name: auth_user_user_permissions auth_user_user_permissions_user_id_permission_id_14a6b632_uniq; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -1997,7 +1930,6 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- TOC entry 3404 (class 2606 OID 24778)
 -- Name: auth_user auth_user_username_key; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2006,7 +1938,6 @@ ALTER TABLE ONLY public.auth_user
 
 
 --
--- TOC entry 3419 (class 2606 OID 24764)
 -- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2015,7 +1946,6 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- TOC entry 3381 (class 2606 OID 24663)
 -- Name: django_content_type django_content_type_app_label_model_76bd3d3b_uniq; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2024,7 +1954,6 @@ ALTER TABLE ONLY public.django_content_type
 
 
 --
--- TOC entry 3383 (class 2606 OID 24661)
 -- Name: django_content_type django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2033,7 +1962,6 @@ ALTER TABLE ONLY public.django_content_type
 
 
 --
--- TOC entry 3379 (class 2606 OID 24655)
 -- Name: django_migrations django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2042,7 +1970,6 @@ ALTER TABLE ONLY public.django_migrations
 
 
 --
--- TOC entry 3423 (class 2606 OID 24791)
 -- Name: django_session django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2051,7 +1978,6 @@ ALTER TABLE ONLY public.django_session
 
 
 --
--- TOC entry 3428 (class 2606 OID 24829)
 -- Name: doctors doctor_phone_no_key; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2060,7 +1986,6 @@ ALTER TABLE ONLY public.doctors
 
 
 --
--- TOC entry 3430 (class 2606 OID 24827)
 -- Name: doctors doctor_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2069,7 +1994,6 @@ ALTER TABLE ONLY public.doctors
 
 
 --
--- TOC entry 3375 (class 2606 OID 24617)
 -- Name: medicine medicine_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2078,7 +2002,6 @@ ALTER TABLE ONLY public.medicine
 
 
 --
--- TOC entry 3432 (class 2606 OID 24843)
 -- Name: patients patient_phone_no_key; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2087,7 +2010,6 @@ ALTER TABLE ONLY public.patients
 
 
 --
--- TOC entry 3434 (class 2606 OID 24841)
 -- Name: patients patient_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2096,7 +2018,6 @@ ALTER TABLE ONLY public.patients
 
 
 --
--- TOC entry 3436 (class 2606 OID 24875)
 -- Name: profile_picture profile_picture_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2105,7 +2026,6 @@ ALTER TABLE ONLY public.profile_picture
 
 
 --
--- TOC entry 3426 (class 2606 OID 24820)
 -- Name: user_authentication_user user_authentication_user_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2114,7 +2034,6 @@ ALTER TABLE ONLY public.user_authentication_user
 
 
 --
--- TOC entry 3377 (class 2606 OID 24645)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2123,7 +2042,6 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 3389 (class 1259 OID 24784)
 -- Name: auth_group_name_a6ea08ec_like; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2131,7 +2049,6 @@ CREATE INDEX auth_group_name_a6ea08ec_like ON public.auth_group USING btree (nam
 
 
 --
--- TOC entry 3394 (class 1259 OID 24725)
 -- Name: auth_group_permissions_group_id_b120cbf9; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2139,7 +2056,6 @@ CREATE INDEX auth_group_permissions_group_id_b120cbf9 ON public.auth_group_permi
 
 
 --
--- TOC entry 3397 (class 1259 OID 24726)
 -- Name: auth_group_permissions_permission_id_84c5c92e; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2147,7 +2063,6 @@ CREATE INDEX auth_group_permissions_permission_id_84c5c92e ON public.auth_group_
 
 
 --
--- TOC entry 3384 (class 1259 OID 24711)
 -- Name: auth_permission_content_type_id_2f476e4b; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2155,7 +2070,6 @@ CREATE INDEX auth_permission_content_type_id_2f476e4b ON public.auth_permission 
 
 
 --
--- TOC entry 3405 (class 1259 OID 24741)
 -- Name: auth_user_groups_group_id_97559544; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2163,7 +2077,6 @@ CREATE INDEX auth_user_groups_group_id_97559544 ON public.auth_user_groups USING
 
 
 --
--- TOC entry 3408 (class 1259 OID 24740)
 -- Name: auth_user_groups_user_id_6a12ed8b; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2171,7 +2084,6 @@ CREATE INDEX auth_user_groups_user_id_6a12ed8b ON public.auth_user_groups USING 
 
 
 --
--- TOC entry 3411 (class 1259 OID 24755)
 -- Name: auth_user_user_permissions_permission_id_1fbb5f2c; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2179,7 +2091,6 @@ CREATE INDEX auth_user_user_permissions_permission_id_1fbb5f2c ON public.auth_us
 
 
 --
--- TOC entry 3414 (class 1259 OID 24754)
 -- Name: auth_user_user_permissions_user_id_a95ead1b; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2187,7 +2098,6 @@ CREATE INDEX auth_user_user_permissions_user_id_a95ead1b ON public.auth_user_use
 
 
 --
--- TOC entry 3402 (class 1259 OID 24779)
 -- Name: auth_user_username_6821ab7c_like; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2195,7 +2105,6 @@ CREATE INDEX auth_user_username_6821ab7c_like ON public.auth_user USING btree (u
 
 
 --
--- TOC entry 3417 (class 1259 OID 24775)
 -- Name: django_admin_log_content_type_id_c4bce8eb; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2203,7 +2112,6 @@ CREATE INDEX django_admin_log_content_type_id_c4bce8eb ON public.django_admin_lo
 
 
 --
--- TOC entry 3420 (class 1259 OID 24776)
 -- Name: django_admin_log_user_id_c564eba6; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2211,7 +2119,6 @@ CREATE INDEX django_admin_log_user_id_c564eba6 ON public.django_admin_log USING 
 
 
 --
--- TOC entry 3421 (class 1259 OID 24793)
 -- Name: django_session_expire_date_a5c62663; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2219,7 +2126,6 @@ CREATE INDEX django_session_expire_date_a5c62663 ON public.django_session USING 
 
 
 --
--- TOC entry 3424 (class 1259 OID 24792)
 -- Name: django_session_session_key_c0390e0f_like; Type: INDEX; Schema: public; Owner: oblivious
 --
 
@@ -2227,7 +2133,6 @@ CREATE INDEX django_session_session_key_c0390e0f_like ON public.django_session U
 
 
 --
--- TOC entry 3453 (class 2620 OID 16442)
 -- Name: blood_repo blood_group_validation; Type: TRIGGER; Schema: public; Owner: oblivious
 --
 
@@ -2235,7 +2140,6 @@ CREATE TRIGGER blood_group_validation BEFORE INSERT ON public.blood_repo FOR EAC
 
 
 --
--- TOC entry 3454 (class 2620 OID 16443)
 -- Name: blood_repo validate_phone_no_trigger; Type: TRIGGER; Schema: public; Owner: oblivious
 --
 
@@ -2243,7 +2147,6 @@ CREATE TRIGGER validate_phone_no_trigger BEFORE INSERT OR UPDATE ON public.blood
 
 
 --
--- TOC entry 3451 (class 2606 OID 24905)
 -- Name: appointments appointments_doctor_username_fkey; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2252,7 +2155,6 @@ ALTER TABLE ONLY public.appointments
 
 
 --
--- TOC entry 3452 (class 2606 OID 24900)
 -- Name: appointments appointments_patient_username_fkey; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2261,7 +2163,6 @@ ALTER TABLE ONLY public.appointments
 
 
 --
--- TOC entry 3440 (class 2606 OID 24720)
 -- Name: auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2270,7 +2171,6 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- TOC entry 3441 (class 2606 OID 24715)
 -- Name: auth_group_permissions auth_group_permissions_group_id_b120cbf9_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2279,7 +2179,6 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- TOC entry 3439 (class 2606 OID 24706)
 -- Name: auth_permission auth_permission_content_type_id_2f476e4b_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2288,7 +2187,6 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- TOC entry 3442 (class 2606 OID 24735)
 -- Name: auth_user_groups auth_user_groups_group_id_97559544_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2297,7 +2195,6 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- TOC entry 3443 (class 2606 OID 24730)
 -- Name: auth_user_groups auth_user_groups_user_id_6a12ed8b_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2306,7 +2203,6 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- TOC entry 3444 (class 2606 OID 24749)
 -- Name: auth_user_user_permissions auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2315,7 +2211,6 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- TOC entry 3445 (class 2606 OID 24744)
 -- Name: auth_user_user_permissions auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2324,7 +2219,6 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- TOC entry 3446 (class 2606 OID 24765)
 -- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2333,7 +2227,6 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- TOC entry 3447 (class 2606 OID 24770)
 -- Name: django_admin_log django_admin_log_user_id_c564eba6_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2342,7 +2235,6 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- TOC entry 3448 (class 2606 OID 24830)
 -- Name: doctors fk_doctor_username; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2351,7 +2243,6 @@ ALTER TABLE ONLY public.doctors
 
 
 --
--- TOC entry 3449 (class 2606 OID 24844)
 -- Name: patients fk_patient_username; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
@@ -2360,15 +2251,12 @@ ALTER TABLE ONLY public.patients
 
 
 --
--- TOC entry 3450 (class 2606 OID 24876)
 -- Name: profile_picture profile_picture_username_fkey; Type: FK CONSTRAINT; Schema: public; Owner: oblivious
 --
 
 ALTER TABLE ONLY public.profile_picture
     ADD CONSTRAINT profile_picture_username_fkey FOREIGN KEY (username) REFERENCES public.doctors(username) ON DELETE CASCADE;
 
-
--- Completed on 2025-01-22 21:18:53 +06
 
 --
 -- PostgreSQL database dump complete
